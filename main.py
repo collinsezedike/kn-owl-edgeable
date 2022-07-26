@@ -4,11 +4,12 @@ from flask_wtf import FlaskForm
 from wtforms import SearchField, SubmitField
 from wtforms.validators import DataRequired
 import requests
+import os
 
 
 def get_definition(word: str):
     API_ENDPOINT = f"https://owlbot.info/api/v4/dictionary/{word}"
-    API_TOKEN = "ea674c11920faab4e1e07d00ff843f00c56d2167"
+    API_TOKEN = os.getenv("API_TOKEN")
 
     header = {
         "accept-encoding": "utf-8",
@@ -24,7 +25,7 @@ class SearchForm(FlaskForm):
 
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "ThisISAranDOMSEcreKEy"
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 Bootstrap5(app)
 
 
