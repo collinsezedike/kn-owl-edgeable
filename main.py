@@ -41,6 +41,7 @@ def home():
 @app.route("/definition/<word>")
 def define(word):
     
+    word = word.lower()
     is_invalid = False
 
     response = get_definition(word)
