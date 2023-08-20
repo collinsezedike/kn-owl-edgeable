@@ -7,10 +7,6 @@ import requests
 import os
 import re
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
 API_ENDPOINT = f"https://api.dictionaryapi.dev/api/v2/entries/en/<word>"
 
 
@@ -35,7 +31,6 @@ def call_endpoint(word: str):
         "pronunciation": pronunciation, 
         "definitions": definitions 
     }
-
 
 
 class SearchForm(FlaskForm):
@@ -70,4 +65,4 @@ def define(word):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
