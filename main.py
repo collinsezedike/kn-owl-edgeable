@@ -5,18 +5,37 @@ from wtforms import SearchField, SubmitField
 from wtforms.validators import DataRequired
 import requests
 import os
+import re
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+API_ENDPOINT = f"https://api.dictionaryapi.dev/api/v2/entries/en/<word>"
 
 
-def get_definition(word: str):
-    API_ENDPOINT = f"https://owlbot.info/api/v4/dictionary/{word}"
-    API_TOKEN = os.getenv("API_TOKEN")
+def call_endpoint(word: str):
+    response = requests.get(API_ENDPOINT.replace("<word>", word))
 
-    header = {
-        "accept-encoding": "utf-8",
-        "Authorization": f"Token {API_TOKEN}",
+    if response.status_code == 404:
+        return False
+
+    data = response.json()
+    pronunciation = data[0]["phonetic"]
+    definitions = []
+
+    for word_entry in data:
+        for word_meanings in word_entry["meanings"]:
+            pos = word_meanings["partOfSpeech"]
+            for meaning in word_meanings["definitions"]:
+                meaning["type"] = pos
+                definitions.append(meaning)
+    return {
+        "word": word,    
+        "pronunciation": pronunciation, 
+        "definitions": definitions 
     }
-    
-    return requests.get(API_ENDPOINT, headers=header)
+
 
 
 class SearchForm(FlaskForm):
@@ -29,7 +48,7 @@ app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 Bootstrap5(app)
 
 
-@app.route("/", methods=["GET","POST"])
+@app.route("/", methods=["GET", "POST"])
 def home():
     form = SearchForm()
     if form.validate_on_submit():
@@ -40,20 +59,15 @@ def home():
 
 @app.route("/definition/<word>")
 def define(word):
-    
     word = word.lower()
     is_invalid = False
 
-    response = get_definition(word)
-    if response.status_code == 200:
-        response = response.json()
-    elif response.status_code == 404:
+    data = call_endpoint(word)
+    if not data:
         is_invalid = (True, word)
 
-    return render_template("response.html", 
-                            is_invalid=is_invalid, 
-                            response=response)
+    return render_template("response.html", is_invalid=is_invalid, data=data)
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
